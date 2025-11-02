@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker Bot 💸</title>
+
+    <!-- PyScript -->
+    <link
+      rel="stylesheet"
+      href="https://pyscript.net/releases/2025.10.1/core.css"
+    />
+    <script
+      type="module"
+      src="https://pyscript.net/releases/2025.10.1/core.js"
+    ></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #74ebd5, #acb6e5);
+        margin: 0;
+        padding: 0;
+        color: #333;
+        display: flex;x
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .container {
+        background: #fff;
+        width: 90%;
+        max-width: 900px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        padding: 30px 40px;
+      }
+
+      header {
+        text-align: center;
+        border-bottom: 3px solid #eee;
+        margin-bottom: 25px;
+      }
+
+      header h1 {
+        font-size: 2em;
+        color: #2c3e50;
+        margin-bottom: 5px;
+      }
+
+      header p {
+        color: #7f8c8d;
+        font-size: 1em;
+      }
+
+      .output {
+        background: #111;
+        color: #0f0;
+        padding: 15px;
+        border-radius: 10px;
+        height: 320px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 0.95em;
+      }
+
+      .input-line {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .input-line input {
+        flex: 1;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-family: "Courier New", monospace;
+        background: #222;
+        color: #0f0;
+      }
+
+      .input-line button {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .input-line button:hover {
+        background: #2980b9;
+      }
+
+      .chart-container {
+        margin-top: 25px;
+        text-align: center;
+      }
+
+      canvas {
+        max-width: 400px;
+        margin: auto;
+      }
+
+      footer {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 0.9em;
+        color: #555;
+      }
+
+      footer a {
+        text-decoration: none;
+        color: #3498db;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <header>
+        <h1>💸 Expense Tracker Bot</h1>
+        <p>Interactive Terminal Simulation — PyScript Edition</p>
+      </header>
+
+      <div class="output" id="terminal"></div>
+
+      <div class="input-line">
+        <span>&gt;</span>
+        <input id="userInput" type="text" placeholder="Type here..." />
+        <button id="submitBtn">Enter</button>
+      </div>
+
+      <div class="chart-container">
+        <h3>📊 Expense Distribution</h3>
+        <canvas id="expenseChart"></canvas>
+      </div>
+
+      <footer>
+        <p>
+          Built with ❤️ using
+          <a href="https://pyscript.net" target="_blank">PyScript</a>
+        </p>
+      </footer>
+    </div>
+
+    <py-script>
+from js import document, Chart
+from pyodide.ffi import create_proxy, to_js
+
+# === Terminal UI setup ===
+terminal = document.getElementById("terminal")
+user_input = document.getElementById("userInput")
+submit_btn = document.getElementById("submitBtn")
+chart_ctx = document.getElementById("expenseChart").getContext("2d")
+
+# === Original Python Variables ===
+budget = 0.0
+expenses = []
+step = "welcome"
+current_item = None
+
+# === Create Chart.js pie chart safely ===
+chart_config = {
+    "type": "pie",
+    "data": {
+        "labels": [],
+        "datasets": [{
+            "label": "Expenses",
+            "data": [],
+            "backgroundColor": [
+                "#ff6384", "#36a2eb", "#ffce56", "#4bc0c0", "#9966ff",
+                "#ff9f40", "#66bb6a", "#ef5350", "#29b6f6", "#ab47bc"
+            ],
+        }]
+    },
+    "options": {
+        "plugins": {"legend": {"position": "bottom"}},
+    },
+}
+
+chart = Chart.new(chart_ctx, to_js(chart_config))
+
+def update_chart():
+    """Update pie chart whenever expenses change."""
+    labels = [e[0] for e in expenses]
+    data = [e[1] for e in expenses]
+    chart.data.labels = to_js(labels)
+    chart.data.datasets[0].data = to_js(data)
+    chart.update()
+
+# === Output helpers ===
+def print_term(text):
+    terminal.innerHTML += text.replace("\n", "<br>") + "<br>"
+    terminal.scrollTop = terminal.scrollHeight
+
+def clear_input():
+    user_input.value = ""
+
+# === Core Bot Logic (intact) ===
+def process_input(event=None):
+    global step, budget, expenses, current_item
+
+    val = user_input.value.strip()
+    if not val:
+        return
+    print_term(f"&gt; {val}")
+    clear_input()
+
+    if step == "welcome":
+        print_term("╔══════════════════════════════════════════════════╗")
+        print_term("║        💸 Welcome to Expense Tracker Bot 💸       ║")
+        print_term("╚══════════════════════════════════════════════════╝")
+        print_term("👉 Enter your monthly budget (₹):")
+        step = "set_budget"
+
+    elif step == "set_budget":
+        try:
+            budget = float(val)
+            print_term(f"💰 Budget set to ₹{budget:,.2f}")
+            show_menu()
+            step = "menu"
+        except ValueError:
+            print_term("⚠️ Invalid number. Please enter a valid budget.")
+
+    elif step == "menu":
+        if val == "1":
+            print_term("\n📝 ADD NEW EXPENSE")
+            print_term("Enter expense name:")
+            step = "add_item"
+        elif val == "2":
+            show_expenses()
+        elif val == "3":
+            show_status()
+        elif val == "4":
+            print_term("\n👋 Goodbye! Thanks for using the Expense Tracker Bot.")
+            print_term("══════════════════════════════════════════════════")
+            user_input.disabled = True
+            submit_btn.disabled = True
+        else:
+            print_term("⚠️ Invalid choice! Please enter 1-4.")
+
+    elif step == "add_item":
+        current_item = val
+        print_term("Enter expense amount (₹):")
+        step = "add_amount"
+
+    elif step == "add_amount":
+        try:
+            amt = float(val)
+            expenses.append([current_item, amt])
+            print_term(f"✅ Expense '{current_item}' of ₹{amt:.2f} added successfully!")
+            update_chart()
+            show_menu()
+            step = "menu"
+        except ValueError:
+            print_term("⚠️ Invalid amount. Please enter a numeric value.")
+
+def show_menu():
+    print_term("\n" + "═" * 50)
+    print_term("📋  MENU")
+    print_term("═" * 50)
+    print_term("1️⃣  Add Expense")
+    print_term("2️⃣  View All Expenses")
+    print_term("3️⃣  Check Budget Status")
+    print_term("4️⃣  Exit")
+    print_term("═" * 50)
+    print_term("➡️  Enter your choice (1-4):")
+
+def show_expenses():
+    print_term("\n💰 YOUR EXPENSES")
+    print_term("═" * 50)
+    if not expenses:
+        print_term("⚠️  No expenses recorded yet!")
+    else:
+        total = sum(e[1] for e in expenses)
+        print_term(f"{'Item':<25} {'Amount (₹)':>15}")
+        print_term("-" * 40)
+        for e in expenses:
+            print_term(f"{e[0]:<25} ₹{e[1]:>10.2f}")
+        print_term("-" * 40)
+        print_term(f"{'TOTAL SPENT:':<25} ₹{total:>10.2f}")
+    show_menu()
+
+def show_status():
+    total = sum(e[1] for e in expenses)
+    balance = budget - total
+
+    print_term("\n📊 BUDGET STATUS")
+    print_term("═" * 50)
+    print_term(f"💵 Monthly Budget : ₹{budget:,.2f}")
+    print_term(f"💸 Total Spent    : ₹{total:,.2f}")
+    print_term(f"💰 Remaining      : ₹{balance:,.2f}")
+    print_term("═" * 50)
+
+    if balance > 0:
+        print_term("🟢 Great! You are within your budget.")
+    elif balance == 0:
+        print_term("🟡 You have exactly used up your budget.")
+    else:
+        print_term("🔴 Warning! You have exceeded your budget!")
+
+    show_menu()
+
+# === Start ===
+print_term("💸 Type anything to begin...")
+submit_btn.onclick = create_proxy(process_input)
+user_input.addEventListener("keypress", create_proxy(lambda e: process_input() if e.key == "Enter" else None))
+    </py-script>
+  </body>
+</html>
