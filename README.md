@@ -140,9 +140,9 @@ Contributors
 | Name | PRN | Role |
 |------|------|------|
 | **Vivaan Kriplani** | 25030421049 | Developer & UI Designer |
-| **Ayush Waghmare** | 25030421006 | Developer & Backend Integration |
-| **Navdeep Singh** | 25030421027 | Testing & Documentation |
-| **Yousuf Alton** | 25030421050 | Frontend Assistance |
+| **Ayush Waghmare** | 25030421006 | Tester |
+| **Navdeep Singh** | 25030421027 | Developer & Backend Integration |
+| **Yousuf Alton** | 25030421050 | Report Assistance |
 | **Guide:** Prof. Dawa Lepcha | — | Project Supervisor |
 
 ---
